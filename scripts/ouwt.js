@@ -15,7 +15,7 @@
  * selection.setMultipleSelectionAllowed function to change this.
  */
 
-var dhis2BaseUrl =  dhis2.settings.baseUrl;
+var dhis2BaseUrl = dhis2.settings.baseUrl;
 var organisationUnitTreePath = dhis2.settings.baseUrl + "/dhis-web-commons/ouwt/";
 var organisationUnits = {};
 
@@ -39,17 +39,16 @@ dhis2.ou.event.orgUnitSelected = "dhis2.ou.event.orgUnitSelected";
 dhis2.ou.store = null;
 dhis2.ou.memoryOnly = $('html').hasClass('ie7') || $('html').hasClass('ie8');
 
-$(function ()
-{
+$(function () {
     var adapters = [];
     var partial_adapters = [];
 
-    if( dhis2.ou.memoryOnly ) {
-        adapters = [ dhis2.storage.InMemoryAdapter ];
-        partial_adapters = [ dhis2.storage.InMemoryAdapter ];
+    if (dhis2.ou.memoryOnly) {
+        adapters = [dhis2.storage.InMemoryAdapter];
+        partial_adapters = [dhis2.storage.InMemoryAdapter];
     } else {
-		adapters = [ dhis2.storage.IndexedDBAdapter, dhis2.storage.DomLocalStorageAdapter, dhis2.storage.InMemoryAdapter ];
-        partial_adapters = [ dhis2.storage.IndexedDBAdapter, dhis2.storage.DomSessionStorageAdapter, dhis2.storage.InMemoryAdapter ];
+        adapters = [dhis2.storage.IndexedDBAdapter, dhis2.storage.DomLocalStorageAdapter, dhis2.storage.InMemoryAdapter];
+        partial_adapters = [dhis2.storage.IndexedDBAdapter, dhis2.storage.DomSessionStorageAdapter, dhis2.storage.InMemoryAdapter];
     }
 
     dhis2.ou.store = new dhis2.storage.Store({
@@ -66,56 +65,55 @@ $(function ()
         ]
     });
 
-    dhis2.ou.store.open().done( function() {
+    dhis2.ou.store.open().done(function () {
         selection.load();
-    } );
+    });
 });
 
 // -----------------------------------------------------------------------------
 // Selection
 // -----------------------------------------------------------------------------
 
-function isNullOrUndefined(variable) { 
-	return variable === null || variable === undefined; 
+function isNullOrUndefined(variable) {
+    return variable === null || variable === undefined;
 }
 
 //Retrieves polygon of org unit in a recursive way.
 //The function retrieves the polygons of ancestor org units if no polygon is available.
 //Maximum recursion level is 3.
-function getPolygon(org_unit_id, counter){
-$.getJSON(apiBaseUrl+"/organisationUnits/"+org_unit_id+".json?fields=parent,coordinates", 
-		function (json) { 	
-			org_unit_polygon = [];
-			if(json.hasOwnProperty('coordinates')){
-				//console.log(JSON.stringify(json));
-				array_of_coordinates = JSON.parse(json.coordinates);				
-				for(dim=0;dim<array_of_coordinates.length;dim++){
-						org_unit_polygon.push(array_of_coordinates[dim][0]);					
-				}
-			}else{
-				if((counter>3) || (!json.hasOwnProperty('parent')) || (!json.parent.hasOwnProperty('id')) ){
-					add("Warning! Can not retrieve polygon for Org Unit:"+ org_unit_id +" recursion: "+ counter +"!",4);
-				}else{
-					getPolygon(json.parent.id, counter++);
-				}
-			}		
-		}) 
+function getPolygon(org_unit_id, counter) {
+    $.getJSON(apiBaseUrl + "/organisationUnits/" + org_unit_id + ".json?fields=parent,coordinates",
+        function (json) {
+            org_unit_polygon = [];
+            if (json.hasOwnProperty('coordinates')) {
+                //console.log(JSON.stringify(json));
+                array_of_coordinates = JSON.parse(json.coordinates);
+                for (dim = 0; dim < array_of_coordinates.length; dim++) {
+                    org_unit_polygon.push(array_of_coordinates[dim][0]);
+                }
+            } else {
+                if ((counter > 3) || (!json.hasOwnProperty('parent')) || (!json.parent.hasOwnProperty('id'))) {
+                    add("Warning! Can not retrieve polygon for Org Unit:" + org_unit_id + " recursion: " + counter + "!", 4);
+                } else {
+                    getPolygon(json.parent.id, counter++);
+                }
+            }
+        })
 }
-		
+
 //This function runs when an org unit is selected in the tree.
 //It stores the id, name, and ancestors and retrieves the polygon of the selected org unit.
-function Selection()
-{
-    var listenerFunction = function(selected){
-    	//console.log(selected[0]);    	
-    	regionalUnitSelected = true;
-    	org_unit_id=selected[0]; 
-    	org_unit_name=organisationUnits[org_unit_id].n;    	
-    	org_unit_path=organisationUnits[org_unit_id].path;
-    	$("#rightBar").hide();
-    	getPolygon(org_unit_id,1);
+function Selection() {
+    var listenerFunction = function (selected) {
+        //console.log(selected[0]);
+        regionalUnitSelected = true;
+        org_unit_id = selected[0];
+        org_unit_name = organisationUnits[org_unit_id].n;
+        org_unit_path = organisationUnits[org_unit_id].path;
+        $("#rightBar").hide();
+        getPolygon(org_unit_id, 1);
     };
-    
+
     var multipleSelectionAllowed = false;
     var unselectAllowed = true;
     var rootUnselectAllowed = true;
@@ -124,193 +122,193 @@ function Selection()
     var includeChildren = false;
     var offlineLevel;
 
-    this.setListenerFunction = function( listenerFunction_, skipInitialCall ) {
+    this.setListenerFunction = function (listenerFunction_, skipInitialCall) {
         listenerFunction = listenerFunction_;
 
-        if( !skipInitialCall ) {
-            $( "#orgUnitTree" ).one( "ouwtLoaded", function() {
+        if (!skipInitialCall) {
+            $("#orgUnitTree").one("ouwtLoaded", function () {
                 selection.responseReceived();
-            } );
+            });
         }
     };
 
-    this.setOfflineLevel = function( level ) {
+    this.setOfflineLevel = function (level) {
         offlineLevel = level;
     };
 
-    this.setMultipleSelectionAllowed = function( allowed ) {
+    this.setMultipleSelectionAllowed = function (allowed) {
         multipleSelectionAllowed = allowed;
     };
 
-    this.setUnselectAllowed = function( allowed ) {
+    this.setUnselectAllowed = function (allowed) {
         unselectAllowed = allowed;
     };
 
-    this.setRootUnselectAllowed = function( allowed ) {
+    this.setRootUnselectAllowed = function (allowed) {
         rootUnselectAllowed = allowed;
     };
 
-    this.setAutoSelectRoot = function( autoSelect ) {
+    this.setAutoSelectRoot = function (autoSelect) {
         autoSelectRoot = autoSelect;
     };
 
-    this.setIncludeChildren = function( children ) {
+    this.setIncludeChildren = function (children) {
         includeChildren = children;
     };
 
-    this.getSelected = function() {
-        var selected = sessionStorage[ OU_SELECTED_KEY ];
-        selected = selected ? JSON.parse( selected ) : [];
-        selected = $.isArray( selected ) ? selected : [ selected ];
+    this.getSelected = function () {
+        var selected = sessionStorage[OU_SELECTED_KEY];
+        selected = selected ? JSON.parse(selected) : [];
+        selected = $.isArray(selected) ? selected : [selected];
 
         return selected;
     };
 
-    this.clearSelected = function() {
-        sessionStorage.removeItem( OU_SELECTED_KEY );
+    this.clearSelected = function () {
+        sessionStorage.removeItem(OU_SELECTED_KEY);
     };
 
-    this.isSelected = function() {
-    	var ou = selection.getSelected();
-    	return ou && ou.length > 0;
+    this.isSelected = function () {
+        var ou = selection.getSelected();
+        return ou && ou.length > 0;
     };
 
-    this.setSelected = function( selected ) {
-        sessionStorage[ OU_SELECTED_KEY ] = JSON.stringify( selected );
+    this.setSelected = function (selected) {
+        sessionStorage[OU_SELECTED_KEY] = JSON.stringify(selected);
     };
 
-    this.selectedExists = function() {
-        return sessionStorage[ OU_SELECTED_KEY ] != null;
+    this.selectedExists = function () {
+        return sessionStorage[OU_SELECTED_KEY] != null;
     };
 
-    this.getRoots = function() {
-        var roots = localStorage[ OU_ROOTS_KEY ];
-        return roots ? JSON.parse( roots ) : [];
+    this.getRoots = function () {
+        var roots = localStorage[OU_ROOTS_KEY];
+        return roots ? JSON.parse(roots) : [];
     };
 
-    this.setRoots = function(roots) {
-        localStorage[ OU_ROOTS_KEY ] = JSON.stringify( roots );
+    this.setRoots = function (roots) {
+        localStorage[OU_ROOTS_KEY] = JSON.stringify(roots);
     };
 
-    this.getVersion = function() {
-        if ( dhis2.ou.memoryOnly ) {
+    this.getVersion = function () {
+        if (dhis2.ou.memoryOnly) {
             return -1;
         }
 
-        return localStorage[ OU_VERSION_KEY ] ? localStorage[ OU_VERSION_KEY ] : 0;
+        return localStorage[OU_VERSION_KEY] ? localStorage[OU_VERSION_KEY] : 0;
     };
 
-    this.setVersion = function( version ) {
-        localStorage[ OU_VERSION_KEY ] = version;
+    this.setVersion = function (version) {
+        localStorage[OU_VERSION_KEY] = version;
     };
 
-    this.clearVersion = function() {
-        localStorage.removeItem( OU_VERSION_KEY );
+    this.clearVersion = function () {
+        localStorage.removeItem(OU_VERSION_KEY);
     };
 
-    this.getUsername = function() {
-        return localStorage[ OU_USERNAME_KEY ] ? localStorage[ OU_USERNAME_KEY ] : "";
+    this.getUsername = function () {
+        return localStorage[OU_USERNAME_KEY] ? localStorage[OU_USERNAME_KEY] : "";
     };
 
-    this.setUsername = function( username ) {
-        localStorage[ OU_USERNAME_KEY ] = username;
+    this.setUsername = function (username) {
+        localStorage[OU_USERNAME_KEY] = username;
     };
 
-    this.clearUsername = function() {
-        localStorage.removeItem( OU_USERNAME_KEY );
+    this.clearUsername = function () {
+        localStorage.removeItem(OU_USERNAME_KEY);
     };
 
-    this.getAllOrganisationUnits = function() {
+    this.getAllOrganisationUnits = function () {
         var def = $.Deferred();
 
-        dhis2.ou.store.getAll( OU_KEY ).done( function( all ) {
-            var ous = selection.arrayToObjectIdMapper( all );
-            def.resolveWith( window, [ ous ]);
-        } );
+        dhis2.ou.store.getAll(OU_KEY).done(function (all) {
+            var ous = selection.arrayToObjectIdMapper(all);
+            def.resolveWith(window, [ous]);
+        });
 
         return def.promise();
     };
 
-    this.setOrganisationUnits = function( ous ) {
+    this.setOrganisationUnits = function (ous) {
         organisationUnits = {};
-        $.extend( organisationUnits, ous );
-        ous = ous ? _.values( ous ) : [];
+        $.extend(organisationUnits, ous);
+        ous = ous ? _.values(ous) : [];
 
         var def = $.Deferred();
 
         // clear out old tree
-        dhis2.ou.store.removeAll(OU_KEY).always(function() {
-          // set new tree
-          dhis2.ou.store.setAll(OU_KEY, ous).always(function() { 
-            def.resolve();
-          });
+        dhis2.ou.store.removeAll(OU_KEY).always(function () {
+            // set new tree
+            dhis2.ou.store.setAll(OU_KEY, ous).always(function () {
+                def.resolve();
+            });
         });
 
         return def.promise();
     };
 
-    this.clearOrganisationUnits = function() {
-      organisationUnits = [];
+    this.clearOrganisationUnits = function () {
+        organisationUnits = [];
 
-      var def = $.Deferred();
-
-      dhis2.ou.store.removeAll(OU_KEY).always(function() {
-        dhis2.ou.store.removeAll(OU_PARTIAL_KEY).always(function() {
-          def.resolve();
-        });
-      });
-
-      return def.promise();
-    };
-
-    this.getOrganisationUnit = function( id ) {
         var def = $.Deferred();
 
-        dhis2.ou.store.get( OU_KEY, id ).done( function( item ) {
-            if(item) {
+        dhis2.ou.store.removeAll(OU_KEY).always(function () {
+            dhis2.ou.store.removeAll(OU_PARTIAL_KEY).always(function () {
+                def.resolve();
+            });
+        });
+
+        return def.promise();
+    };
+
+    this.getOrganisationUnit = function (id) {
+        var def = $.Deferred();
+
+        dhis2.ou.store.get(OU_KEY, id).done(function (item) {
+            if (item) {
                 var obj = {};
                 obj[item.id] = item;
-                def.resolveWith( window, [ obj ]);
+                def.resolveWith(window, [obj]);
             } else {
-                def.resolveWith( window );
+                def.resolveWith(window);
             }
-        } );
+        });
 
         return def.promise();
     };
 
-    this.getAllPartialOrganisationUnits = function() {
+    this.getAllPartialOrganisationUnits = function () {
         var def = $.Deferred();
 
-        dhis2.ou.store.getAll( OU_PARTIAL_KEY ).done( function( all ) {
-            var ous = selection.arrayToObjectIdMapper( all );
-            def.resolveWith( window, [ ous ]);
-        } );
+        dhis2.ou.store.getAll(OU_PARTIAL_KEY).done(function (all) {
+            var ous = selection.arrayToObjectIdMapper(all);
+            def.resolveWith(window, [ous]);
+        });
 
         return def.promise();
     };
 
-    this.setPartialOrganisationUnits = function( ous ) {
-        $.extend( organisationUnits, ous );
-        ous = ous ? _.values( ous ) : [];
-        return dhis2.ou.store.setAll( OU_PARTIAL_KEY, ous );
+    this.setPartialOrganisationUnits = function (ous) {
+        $.extend(organisationUnits, ous);
+        ous = ous ? _.values(ous) : [];
+        return dhis2.ou.store.setAll(OU_PARTIAL_KEY, ous);
     };
 
     // maps [ { id: 1, ... } ] => { '1': { id: 1, ... } }
-    this.arrayToObjectIdMapper = function( all ) {
+    this.arrayToObjectIdMapper = function (all) {
         var ous = {};
 
-        $.each( all, function( i, item ) {
+        $.each(all, function (i, item) {
             ous[item.id] = item;
-        } );
+        });
 
         return ous;
     };
 
-    this.ajaxOrganisationUnits = function( versionOnly, format ) {
+    this.ajaxOrganisationUnits = function (versionOnly, format) {
         format = format || "json";
 
-        return $.ajax( {
+        return $.ajax({
             url: dhis2BaseUrl + '/dhis-web-commons-ajax-json/getOrganisationUnitTree.action',
             data: {
                 versionOnly: versionOnly,
@@ -318,11 +316,11 @@ function Selection()
             },
             type: 'POST',
             dataType: format
-        } );
+        });
     };
 
-    this.busy = function( busy ) {
-        if( busy ) {
+    this.busy = function (busy) {
+        if (busy) {
             $("#orgUnitTree").css("cursor", "wait")
                 .find("a").css("cursor", "wait");
         } else {
@@ -331,30 +329,27 @@ function Selection()
         }
     };
 
-    this.isBusy = function() {
+    this.isBusy = function () {
         return $("#orgUnitTree").css("cursor") == "wait";
     };
 
-    this.load = function ()
-    {
-        function sync_and_reload()
-        {
+    this.load = function () {
+        function sync_and_reload() {
             var roots = selection.getRoots();
 
-            if( !selection.selectedExists() && roots.length > 0 ) {
-                if( autoSelectRoot ) {
-                    multipleSelectionAllowed ? selection.setSelected( roots ) : selection.setSelected( roots[0] );
-                }
-                else {
-                    selection.sync( true );
+            if (!selection.selectedExists() && roots.length > 0) {
+                if (autoSelectRoot) {
+                    multipleSelectionAllowed ? selection.setSelected(roots) : selection.setSelected(roots[0]);
+                } else {
+                    selection.sync(true);
                 }
             }
 
-            selection.getAllOrganisationUnits().done( function( all ) {
-                $.extend( organisationUnits, all );
+            selection.getAllOrganisationUnits().done(function (all) {
+                $.extend(organisationUnits, all);
 
-                selection.getAllPartialOrganisationUnits().done( function( all ) {
-                    $.extend( organisationUnits, all );
+                selection.getAllPartialOrganisationUnits().done(function (all) {
+                    $.extend(organisationUnits, all);
 
                     selection.sync();
                     subtree.reloadTree();
@@ -362,42 +357,42 @@ function Selection()
                     var ids = [];
                     var names = [];
 
-                    $.each( selection.getSelected(), function( i, id ) {
-                    	var ou = organisationUnits[id];
+                    $.each(selection.getSelected(), function (i, id) {
+                        var ou = organisationUnits[id];
                         var name = !!ou ? ou.n : '';
-                        ids.push( id );
-                        names.push( name );
-                    } );
-                    
-                    $( "#ouwt_loader" ).hide();
-                    $( "#orgUnitTree" ).trigger( "ouwtLoaded", [ids, names] );
-                } );
-            } );
+                        ids.push(id);
+                        names.push(name);
+                    });
+
+                    $("#ouwt_loader").hide();
+                    $("#orgUnitTree").trigger("ouwtLoaded", [ids, names]);
+                });
+            });
         }
 
-        function update_required( remoteVersion, remoteRoots, remoteUsername ) {
+        function update_required(remoteVersion, remoteRoots, remoteUsername) {
             var localVersion = selection.getVersion();
             var localUsername = selection.getUsername();
             var localRoots = selection.getRoots();
 
-            if ( localVersion != remoteVersion ) {
+            if (localVersion != remoteVersion) {
                 return true;
             }
 
-            if( localUsername != remoteUsername ) {
-              return true;
+            if (localUsername != remoteUsername) {
+                return true;
             }
 
-            if ( localRoots == null || localRoots.length == 0 ) {
+            if (localRoots == null || localRoots.length == 0) {
                 return true;
             }
 
             localRoots.sort();
             remoteRoots.sort();
 
-            for( var i in localRoots ) {
-                if( localRoots.hasOwnProperty( i ) ) {
-                    if( remoteRoots[i] == null || localRoots[i] != remoteRoots[i] ) {
+            for (var i in localRoots) {
+                if (localRoots.hasOwnProperty(i)) {
+                    if (remoteRoots[i] == null || localRoots[i] != remoteRoots[i]) {
                         return true;
                     }
                 }
@@ -408,83 +403,81 @@ function Selection()
 
         var should_update = false;
 
-        selection.ajaxOrganisationUnits( true, 'text' ).done(function( data ) {
-            if ( data.indexOf( "<!DOCTYPE" ) != 0 ) {
-                data = JSON.parse( data );
+        selection.ajaxOrganisationUnits(true, 'text').done(function (data) {
+            if (data.indexOf("<!DOCTYPE") != 0) {
+                data = JSON.parse(data);
                 realRoot = data.realRoot;
-                should_update = update_required( data.version, data.roots, data.username );
+                should_update = update_required(data.version, data.roots, data.username);
             }
-        } ).always( function() {
-            if( should_update ) {
-                selection.ajaxOrganisationUnits( false ).done(function( data ) {
-                    selection.setRoots( data.roots );
-                    selection.setVersion( data.version );
-                    selection.setUsername( data.username );
+        }).always(function () {
+            if (should_update) {
+                selection.ajaxOrganisationUnits(false).done(function (data) {
+                    selection.setRoots(data.roots);
+                    selection.setVersion(data.version);
+                    selection.setUsername(data.username);
 
                     selection.clearSelected();
 
-                    selection.clearOrganisationUnits().always(function() {
-                      selection.setOrganisationUnits( data.organisationUnits ).done(function() {
-                          sync_and_reload();
-                      });
+                    selection.clearOrganisationUnits().always(function () {
+                        selection.setOrganisationUnits(data.organisationUnits).done(function () {
+                            sync_and_reload();
+                        });
                     });
-                } ).fail( function() {
+                }).fail(function () {
                     sync_and_reload();
-                } );
-            }
-            else {
+                });
+            } else {
                 sync_and_reload();
             }
-        } );
+        });
     };
 
     // server = true : sync from server
     // server = false : sync to server
-    this.sync = function ( server, fn )
-    {
-        if ( fn === undefined ) {
-            fn = function () {};
+    this.sync = function (server, fn) {
+        if (fn === undefined) {
+            fn = function () {
+            };
         }
 
-        if( server ) {
+        if (server) {
             selection.clearSelected();
 
-            $.post( organisationUnitTreePath + "getselected.action", function( data ) {
-                if( data["selectedUnits"].length < 1 ) {
+            $.post(organisationUnitTreePath + "getselected.action", function (data) {
+                if (data["selectedUnits"].length < 1) {
                     return;
                 }
 
-                if( multipleSelectionAllowed ) {
+                if (multipleSelectionAllowed) {
                     var selected = [];
 
-                    $.each( data["selectedUnits"], function( i, item ) {
-                        selected.push( item.id );
-                    } );
+                    $.each(data["selectedUnits"], function (i, item) {
+                        selected.push(item.id);
+                    });
 
-                    selection.setSelected( selected );
-                }
-                else {
+                    selection.setSelected(selected);
+                } else {
                     var ou = data["selectedUnits"][0];
-                    selection.setSelected( ou.id );
+                    selection.setSelected(ou.id);
                 }
 
                 subtree.reloadTree();
-            } );
+            });
         } else {
             function doSync() {
-                $.ajax( {
+                $.ajax({
                     url: organisationUnitTreePath + "clearselected.action",
                     type: 'POST'
-                }).done(function() {
+                }).done(function () {
                     var selected = selection.getSelected();
 
-                    if( multipleSelectionAllowed ) {
+                    if (multipleSelectionAllowed) {
                         var q = '';
 
-                        $.each( selected, function( i, item ) {
+                        $.each(selected, function (i, item) {
                             q += "id=" + item;
 
-                            if( i < (selected.length - 1) ) {
+                            if (i < (selected.length - 1)) {
                                 q += '&';
                             }
                         });
@@ -493,252 +486,246 @@ function Selection()
                             url: organisationUnitTreePath + "addorgunit.action",
                             data: q,
                             type: 'POST'
-                        } ).complete( function() {
-                            selection.busy( false );
+                        }).complete(function () {
+                            selection.busy(false);
                         });
                     } else {
-                        selected = $.isArray( selected ) ? selected[0] : selected;
+                        selected = $.isArray(selected) ? selected[0] : selected;
 
-                        $.post( organisationUnitTreePath + "setorgunit.action", {
+                        $.post(organisationUnitTreePath + "setorgunit.action", {
                             id: selected
-                        } ).complete( function() {
-                            selection.busy( false );
+                        }).complete(function () {
+                            selection.busy(false);
                             fn();
-                        } );
+                        });
                     }
-                }).always(function() {
-                    selection.busy( false );
+                }).always(function () {
+                    selection.busy(false);
                 });
             }
 
-          selection.busy( true );
+            selection.busy(true);
 
-          if( selection.getSelected() && selection.getSelected().length === 0 ) {
-        	  setTimeout(doSync, 1000); // Workaround for indexeddb slowness
-          } 
-          else {
-        	  doSync();
-          }
+            if (selection.getSelected() && selection.getSelected().length === 0) {
+                setTimeout(doSync, 1000); // Workaround for indexeddb slowness
+            } else {
+                doSync();
+            }
         }
     };
 
-    this.clear = function ()
-    {
+    this.clear = function () {
         selection.clearSelected();
 
         var roots = selection.getRoots();
         //selection.setSelected(selection.getAllPartialOrganisationUnits());
-		//selection.getRoots().length > 1 ? selection.setSelected( roots ) : selection.setSelected( roots[0] );
+        //selection.getRoots().length > 1 ? selection.setSelected( roots ) : selection.setSelected( roots[0] );
         subtree.reloadTree();
 
-        $.post( organisationUnitTreePath + "clearselected.action" ).complete( this.responseReceived );
+        $.post(organisationUnitTreePath + "clearselected.action").complete(this.responseReceived);
     };
 
-    this.select = function( unitId ) {
-        if( selection.isBusy() ) {
+    this.select = function (unitId) {
+        if (selection.isBusy()) {
             return;
         }
 
-        var $linkTag = $( "#" + getTagId( unitId ) ).find( "a" ).eq( 0 );
+        var $linkTag = $("#" + getTagId(unitId)).find("a").eq(0);
 
-        if( $linkTag.hasClass( "selected" ) && ( unselectAllowed || rootUnselectAllowed ) ) {
+        if ($linkTag.hasClass("selected") && (unselectAllowed || rootUnselectAllowed)) {
             var selected = selection.getSelected();
 
-            if( rootUnselectAllowed && !unselectAllowed && !multipleSelectionAllowed ) {
+            if (rootUnselectAllowed && !unselectAllowed && !multipleSelectionAllowed) {
                 var roots = selection.getRoots();
 
-                if( $.inArray( selected, roots ) == -1 ) {
+                if ($.inArray(selected, roots) == -1) {
                     return;
                 }
 
-                if( !realRoot ) {
+                if (!realRoot) {
                     return;
                 }
             }
 
-            if( !!selected && $.isArray( selected ) ) {
+            if (!!selected && $.isArray(selected)) {
                 var idx = selected.indexOf(unitId);
-				
+
                 /*$.each( selected, function( i, item ) {
                     if( item === unitId ) {
                         idx = i;
                     }
                 } );*/
 
-                if(idx > -1) {
+                if (idx > -1) {
                     selected.splice(idx, 1);
-					//dhis2.array.remove( selected, idx, idx );
+                    //dhis2.array.remove( selected, idx, idx );
                 }
 
-                selection.setSelected( selected );
+                selection.setSelected(selected);
             } else {
                 selection.clearSelected();
             }
 
-            selection.busy( true );
+            selection.busy(true);
 
-            $.post( organisationUnitTreePath + "removeorgunit.action", {
+            $.post(organisationUnitTreePath + "removeorgunit.action", {
                 id: unitId
-            } ).complete( function() {
-                selection.busy( false );
+            }).complete(function () {
+                selection.busy(false);
                 selection.responseReceived();
             });
 
-            $linkTag.removeClass( "selected" );
+            $linkTag.removeClass("selected");
         } else {
-            if( multipleSelectionAllowed ) {
+            if (multipleSelectionAllowed) {
                 var selected = selection.getSelected();
 
-                if( selected.indexOf( unitId ) !== -1 ) {
+                if (selected.indexOf(unitId) !== -1) {
                     return;
                 }
 
-                selected.push( unitId );
-                selection.setSelected( selected );
+                selected.push(unitId);
+                selection.setSelected(selected);
 
-                selection.busy( true );
+                selection.busy(true);
 
-                $.post( organisationUnitTreePath + "addorgunit.action", {
+                $.post(organisationUnitTreePath + "addorgunit.action", {
                     id: unitId
-                } ).complete( function() {
-                    selection.busy( false );
+                }).complete(function () {
+                    selection.busy(false);
                     selection.responseReceived();
                 });
 
-                $linkTag.addClass( "selected" );
-            }
-            else
-            {
-                selection.setSelected( unitId );
+                $linkTag.addClass("selected");
+            } else {
+                selection.setSelected(unitId);
 
-                selection.busy( true );
+                selection.busy(true);
 
-                $.ajax( {
-                    url:organisationUnitTreePath + "setorgunit.action",
-                    data:{
-                        id:unitId
+                $.ajax({
+                    url: organisationUnitTreePath + "setorgunit.action",
+                    data: {
+                        id: unitId
                     },
-                    type:'POST',
-                    timeout:10000,
-                    complete: function() {
-                        selection.busy( false );
+                    type: 'POST',
+                    timeout: 10000,
+                    complete: function () {
+                        selection.busy(false);
                         selection.responseReceived();
                     }
-                } );
+                });
 
-                $( "#orgUnitTree" ).find( "a" ).removeClass( "selected" );
-                $linkTag.addClass( "selected" );
+                $("#orgUnitTree").find("a").removeClass("selected");
+                $linkTag.addClass("selected");
             }
         }
     };
 
-    this.responseReceived = function() {
+    this.responseReceived = function () {
         var children = [];
         var ids = [];
         var names = [];
         var selected = selection.getSelected();
 
-        if( multipleSelectionAllowed ) {
-            $.each( selected, function( i, item ) {
+        if (multipleSelectionAllowed) {
+            $.each(selected, function (i, item) {
                 var name = organisationUnits[item].n;
-                ids.push( item );
-                names.push( name );
-            } );
-            
-            $( document ).trigger( dhis2.ou.event.orgUnitSelected, [ids, names, children] );
-            
-            if( typeof listenerFunction === 'function') {
-            	listenerFunction( ids, names, children );
+                ids.push(item);
+                names.push(name);
+            });
+
+            $(document).trigger(dhis2.ou.event.orgUnitSelected, [ids, names, children]);
+
+            if (typeof listenerFunction === 'function') {
+                listenerFunction(ids, names, children);
             }
         } else {
             selected = selected[0];
 
-            if( 'undefined' !== typeof organisationUnits[selected]) {
+            if ('undefined' !== typeof organisationUnits[selected]) {
                 // we only support includeChildren for single selects
-                if( includeChildren ) {
+                if (includeChildren) {
                     children = organisationUnits[selected].c;
                 }
 
                 var name = organisationUnits[selected].n;
-                ids.push( selected );
-                names.push( name );
+                ids.push(selected);
+                names.push(name);
 
-                $( document ).trigger( dhis2.ou.event.orgUnitSelected, [ids, names, children] );
+                $(document).trigger(dhis2.ou.event.orgUnitSelected, [ids, names, children]);
 
-                if( typeof listenerFunction === 'function') {
-                	listenerFunction( ids, names, children );
+                if (typeof listenerFunction === 'function') {
+                    listenerFunction(ids, names, children);
                 }
             }
         }
     };
 
-    function getTagId( unitId )
-    {
+    function getTagId(unitId) {
         return 'orgUnit' + unitId;
     }
 
-    this.scrollToSelected = function() {
-    	var ou = selection.getSelected();
+    this.scrollToSelected = function () {
+        var ou = selection.getSelected();
 
-    	if ( ou && ou.length ) {
-    		$( "#orgUnitTree" ).scrollTop( 0 );
-    		var tagId = "#" + getTagId( ou[0] );
-    		var tagOffset = $( tagId ).offset().top;
-    		var treeOffset = $( "#orgUnitTree" ).offset().top;
-    		var offset = tagOffset - treeOffset;
-    		$( "#orgUnitTree" ).animate( { scrollTop: offset }, 300 );
-    	}
+        if (ou && ou.length) {
+            $("#orgUnitTree").scrollTop(0);
+            var tagId = "#" + getTagId(ou[0]);
+            var tagOffset = $(tagId).offset().top;
+            var treeOffset = $("#orgUnitTree").offset().top;
+            var offset = tagOffset - treeOffset;
+            $("#orgUnitTree").animate({scrollTop: offset}, 300);
+        }
     };
 
-    this.findByName = function() {
-        var name = $( '#searchField' ).val();
+    this.findByName = function () {
+        var name = $('#searchField').val();
         var match;
 
-        for( var ou in organisationUnits ) {
-            if( organisationUnits.hasOwnProperty( ou ) ) {
+        for (var ou in organisationUnits) {
+            if (organisationUnits.hasOwnProperty(ou)) {
                 var value = organisationUnits[ou];
-                if( value.n == name ) {
+                if (value.n == name) {
                     match = value;
                 }
             }
         }
 
-        if( match !== undefined ) {
-            $( '#searchField' ).css( 'background-color', '#fff' );
+        if (match !== undefined) {
+            $('#searchField').css('background-color', '#fff');
 
-            multipleSelectionAllowed ? selection.setSelected( [ match.id ] ) : selection.setSelected( match.id );
+            multipleSelectionAllowed ? selection.setSelected([match.id]) : selection.setSelected(match.id);
 
             subtree.reloadTree();
-            selection.sync( false, selection.responseReceived );
+            selection.sync(false, selection.responseReceived);
             selection.scrollToSelected();
-        }
-        else {
-            $.ajax( {
+        } else {
+            $.ajax({
                 url: dhis2BaseUrl + '/dhis-web-commons-ajax-json/getOrganisationUnitTree.action',
-                data: { byName: name }
-            } ).done(function( data ) {
-                if( data.realRoot === undefined ) {
-                    selection.getAllPartialOrganisationUnits().done(function(all) {
-                        $.extend( all, data.organisationUnits );
+                data: {byName: name}
+            }).done(function (data) {
+                if (data.realRoot === undefined) {
+                    selection.getAllPartialOrganisationUnits().done(function (all) {
+                        $.extend(all, data.organisationUnits);
 
-                        selection.setPartialOrganisationUnits( all ).done(function() {
-                            $.extend( organisationUnits, data.organisationUnits );
+                        selection.setPartialOrganisationUnits(all).done(function () {
+                            $.extend(organisationUnits, data.organisationUnits);
                             selection.findByName();
                         });
                     });
                 }
-            } ).fail( function() {
-                $( '#searchField' ).css( 'background-color', '#ffc5c5' );
-            } );
+            }).fail(function () {
+                $('#searchField').css('background-color', '#ffc5c5');
+            });
         }
     };
 
-    this.enable = function() {
-        $( "#orgUnitTree" ).show();
+    this.enable = function () {
+        $("#orgUnitTree").show();
     };
 
-    this.disable = function() {
-        $( "#orgUnitTree" ).hide();
+    this.disable = function () {
+        $("#orgUnitTree").hide();
     };
 }
 
@@ -747,74 +734,72 @@ function Selection()
 // -----------------------------------------------------------------------------
 
 function Subtree() {
-    this.ajaxGetChildren = function( parentId ) {
-        return $.post( dhis2BaseUrl + '/dhis-web-commons-ajax-json/getOrganisationUnitTree.action?parentId=' + parentId);
+    this.ajaxGetChildren = function (parentId) {
+        return $.post(dhis2BaseUrl + '/dhis-web-commons-ajax-json/getOrganisationUnitTree.action?parentId=' + parentId);
     };
 
-    this.ajaxGetLeaf = function( parentId ) {
-        return $.post( dhis2BaseUrl + '/dhis-web-commons-ajax-json/getOrganisationUnitTree.action?leafId=' + parentId);
+    this.ajaxGetLeaf = function (parentId) {
+        return $.post(dhis2BaseUrl + '/dhis-web-commons-ajax-json/getOrganisationUnitTree.action?leafId=' + parentId);
     };
 
-    this.toggle = function( unitId ) {
-        var children = $( "#" + getTagId( unitId ) ).find( "ul" );
+    this.toggle = function (unitId) {
+        var children = $("#" + getTagId(unitId)).find("ul");
         var ou = organisationUnits[unitId];
 
-        if( children.length < 1 || !isVisible( children[0] ) ) {
-            processExpand( ou );
+        if (children.length < 1 || !isVisible(children[0])) {
+            processExpand(ou);
+        } else {
+            processCollapse(ou);
         }
-        else {
-            processCollapse( ou );
-        }
     };
 
-    var selectOrgUnits = function( ous ) {
-        $.each( ous, function( i, item ) {
-            selectOrgUnit( item );
-        } );
+    var selectOrgUnits = function (ous) {
+        $.each(ous, function (i, item) {
+            selectOrgUnit(item);
+        });
     };
 
-    var selectOrgUnit = function( ou ) {
-        $( "#" + getTagId( ou ) + " > a" ).addClass( "selected" );
+    var selectOrgUnit = function (ou) {
+        $("#" + getTagId(ou) + " > a").addClass("selected");
     };
 
-    var expandTreeAtOrgUnits = function( ous, select ) {
-        $.each( ous, function( i, item ) {
-            expandTreeAtOrgUnit( item, select );
-        } );
+    var expandTreeAtOrgUnits = function (ous, select) {
+        $.each(ous, function (i, item) {
+            expandTreeAtOrgUnit(item, select);
+        });
     };
 
-    var expandTreeAtOrgUnit = function( ou, select ) {
+    var expandTreeAtOrgUnit = function (ou, select) {
         select = select || false;
 
-      if( organisationUnits[ou] == null ) {
-          subtree.ajaxGetLeaf(ou).done(function( data ) {
-            $.extend( organisationUnits, data.organisationUnits);
+        if (organisationUnits[ou] == null) {
+            subtree.ajaxGetLeaf(ou).done(function (data) {
+                $.extend(organisationUnits, data.organisationUnits);
 
-            if(organisationUnits[ou]) {
-              expandTreeAtOrgUnit(ou, select);
-            }
-          });
+                if (organisationUnits[ou]) {
+                    expandTreeAtOrgUnit(ou, select);
+                }
+            });
 
-          return;
+            return;
         }
 
         var ouEl = organisationUnits[ou];
 
-        var $rootsTag = $( "#orgUnitTree > ul" );
+        var $rootsTag = $("#orgUnitTree > ul");
 
-        if( $rootsTag.length < 1 ) {
-            $( "#orgUnitTree" ).append( "<ul/>" );
-            $rootsTag = $( "#orgUnitTree > ul" );
+        if ($rootsTag.length < 1) {
+            $("#orgUnitTree").append("<ul/>");
+            $rootsTag = $("#orgUnitTree > ul");
         }
 
         var array = [];
 
-        if( ouEl.pid !== undefined ) {
-            while( ouEl.pid !== undefined ) {
-                if( organisationUnits[ouEl.pid] != null ) {
-                    array.push( ouEl.pid );
-                }
-                else {
+        if (ouEl.pid !== undefined) {
+            while (ouEl.pid !== undefined) {
+                if (organisationUnits[ouEl.pid] != null) {
+                    array.push(ouEl.pid);
+                } else {
                     break;
                 }
 
@@ -826,93 +811,92 @@ function Subtree() {
 
         var rootId = array.length < 1 ? ou : array[0];
 
-        if( $( "#" + getTagId( rootId ) ).length < 1 ) {
+        if ($("#" + getTagId(rootId)).length < 1) {
             var expand = organisationUnits[rootId];
             // var $parentTag = $( "#" + getTagId( rootId ) );
-            $rootsTag.append( createTreeElementTag( expand ) );
+            $rootsTag.append(createTreeElementTag(expand));
         }
 
-        $.each( array, function( i, item ) {
+        $.each(array, function (i, item) {
             var expand = organisationUnits[item];
-            processExpand( expand );
-        } );
+            processExpand(expand);
+        });
 
-        if( select ) {
-          selectOrgUnit(ou);
+        if (select) {
+            selectOrgUnit(ou);
         }
     };
 
-    this.reloadTree = function() {
-        var $treeTag = $( "#orgUnitTree" );
-        $treeTag.children().eq( 0 ).remove();
+    this.reloadTree = function () {
+        var $treeTag = $("#orgUnitTree");
+        $treeTag.children().eq(0).remove();
 
         var roots = selection.getRoots();
         var selected = selection.getSelected();
 
-        expandTreeAtOrgUnits( roots );
-        expandTreeAtOrgUnits( selected, true );
+        expandTreeAtOrgUnits(roots);
+        expandTreeAtOrgUnits(selected, true);
 
-        selectOrgUnits( selected );
+        selectOrgUnits(selected);
     };
 
     // force reload
-    this.refreshTree = function() {
+    this.refreshTree = function () {
         selection.clearVersion();
         selection.clearUsername();
         selection.load();
     };
 
-    function processCollapse( parent ) {
-        var $parentTag = $( "#" + getTagId( parent.id ) );
-        var child = $parentTag.find( "ul" ).eq( 0 );
-        setVisible( child, false );
-        setToggle( $parentTag, false );
+    function processCollapse(parent) {
+        var $parentTag = $("#" + getTagId(parent.id));
+        var child = $parentTag.find("ul").eq(0);
+        setVisible(child, false);
+        setToggle($parentTag, false);
     }
 
-    function processExpand( parent ) {
-        var $parentTag = $( "#" + getTagId( parent.id ) );
-        var $children = $parentTag.find( "ul" );
+    function processExpand(parent) {
+        var $parentTag = $("#" + getTagId(parent.id));
+        var $children = $parentTag.find("ul");
 
-        if( $children.length < 1 ) {
-            subtree.getAndCreateChildren( $parentTag, parent );
-        }
-        else {
-            setVisible( $children.eq( 0 ), true );
-            setToggle( $parentTag, true );
+        if ($children.length < 1) {
+            subtree.getAndCreateChildren($parentTag, parent);
+        } else {
+            setVisible($children.eq(0), true);
+            setToggle($parentTag, true);
         }
     }
 
-    this.getChildren = function( parentId ) {
+    this.getChildren = function (parentId) {
         var def = $.Deferred();
         var p = def.promise();
 
-        p = p.then( function() {
+        p = p.then(function () {
             var def = $.Deferred();
 
-            subtree.ajaxGetChildren( parentId ).done(function( data ) {
-                def.resolveWith( window, [ data ] );
-            });
-
-            return def.promise();
-        } );
-
-        p = p.then( function( data ) {
-            var def = $.Deferred();
-
-            selection.getAllPartialOrganisationUnits().done(function( all ) {
-                $.extend( all, data.organisationUnits );
-                def.resolveWith( window, [ all ] );
+            subtree.ajaxGetChildren(parentId).done(function (data) {
+                def.resolveWith(window, [data]);
             });
 
             return def.promise();
         });
 
-        p = p.then( function( data ) {
+        p = p.then(function (data) {
             var def = $.Deferred();
 
-            selection.setPartialOrganisationUnits( data ).done(function() {
-                $.extend( organisationUnits, data.organisationUnits );
-                def.resolveWith( window, [ organisationUnits ] );
+            selection.getAllPartialOrganisationUnits().done(function (all) {
+                $.extend(all, data.organisationUnits);
+                def.resolveWith(window, [all]);
+            });
+
+            return def.promise();
+        });
+
+        p = p.then(function (data) {
+            var def = $.Deferred();
+
+            selection.setPartialOrganisationUnits(data).done(function () {
+                $.extend(organisationUnits, data.organisationUnits);
+                def.resolveWith(window, [organisationUnits]);
             });
 
             return def.promise();
@@ -923,24 +907,23 @@ function Subtree() {
         return p;
     };
 
-    this.getAndCreateChildren = function( parentTag, parent ) {
+    this.getAndCreateChildren = function (parentTag, parent) {
         var def = $.Deferred();
 
-        if( 'undefined' !== typeof organisationUnits[parent.c[0]] ) {
-            createChildren( parentTag, parent );
+        if ('undefined' !== typeof organisationUnits[parent.c[0]]) {
+            createChildren(parentTag, parent);
             def.resolve();
-        }
-        else {
-            selection.getOrganisationUnit( parent.c[0] ).done(function(item) {
-                if(item) {
-                    $.extend( organisationUnits, item );
-                    createChildren( parentTag, parent );
+        } else {
+            selection.getOrganisationUnit(parent.c[0]).done(function (item) {
+                if (item) {
+                    $.extend(organisationUnits, item);
+                    createChildren(parentTag, parent);
                     def.resolve();
                 } else {
-                    subtree.getChildren( parent.id ).done( function() {
-                        createChildren( parentTag, parent );
+                    subtree.getChildren(parent.id).done(function () {
+                        createChildren(parentTag, parent);
                         def.resolve();
-                    }).always(function() {
+                    }).always(function () {
                     });
                 }
             });
@@ -949,89 +932,87 @@ function Subtree() {
         return def.promise();
     };
 
-    function createChildren( parentTag, parent ) {
-        var $childrenTag = $( "<ul/>" );
+    function createChildren(parentTag, parent) {
+        var $childrenTag = $("<ul/>");
 
-        $.each( parent.c, function( i, item ) {
+        $.each(parent.c, function (i, item) {
             var ou = organisationUnits[item];
 
-            if( ou !== undefined ) {
-                $childrenTag.append( createTreeElementTag( ou ) );
+            if (ou !== undefined) {
+                $childrenTag.append(createTreeElementTag(ou));
             }
-        } );
+        });
 
-        setVisible( $childrenTag, true );
-        setToggle( parentTag, true );
+        setVisible($childrenTag, true);
+        setToggle(parentTag, true);
 
-        $( parentTag ).append( $childrenTag );
+        $(parentTag).append($childrenTag);
     }
 
-    function createTreeElementTag( ou ) {
-        var $toggleTag = $( "<span/>" );
-        $toggleTag.addClass( "toggle" );
+    function createTreeElementTag(ou) {
+        var $toggleTag = $("<span/>");
+        $toggleTag.addClass("toggle");
 
-        if( ou.c.length > 0 ) {
-            $toggleTag.bind( "click", new Function( 'subtree.toggle( \"' + ou.id + '\" )' ) );
-            $toggleTag.append( getToggleExpand() );
+        if (ou.c.length > 0) {
+            $toggleTag.bind("click", new Function('subtree.toggle( \"' + ou.id + '\" )'));
+            $toggleTag.append(getToggleExpand());
+        } else {
+            $toggleTag.append(getToggleBlank());
         }
-        else {
-            $toggleTag.append( getToggleBlank() );
-        }
 
-        var $linkTag = $( "<a/>" );
-        $linkTag.attr( "href", "javascript:void selection.select( \"" + ou.id + "\" )" );
-        $linkTag.append( ou.n );
+        var $linkTag = $("<a/>");
+        $linkTag.attr("href", "javascript:void selection.select( \"" + ou.id + "\" )");
+        $linkTag.append(ou.n);
 
-        var $childTag = $( "<li/>" );
+        var $childTag = $("<li/>");
 
-        $childTag.attr( "id", getTagId( ou.id ) );
-        $childTag.attr( "level", ou.l );
-        $childTag.append( " " );
-        $childTag.append( $toggleTag );
-        $childTag.append( " " );
-        $childTag.append( $linkTag );
+        $childTag.attr("id", getTagId(ou.id));
+        $childTag.attr("level", ou.l);
+        $childTag.append(" ");
+        $childTag.append($toggleTag);
+        $childTag.append(" ");
+        $childTag.append($linkTag);
 
         return $childTag;
     }
 
-    function setToggle( unitTag, expanded ) {
-        var $toggleTag = $( unitTag ).find( "span" );
+    function setToggle(unitTag, expanded) {
+        var $toggleTag = $(unitTag).find("span");
         var toggleImg = expanded ? getToggleCollapse() : getToggleExpand();
 
-        if( $toggleTag.children().eq( 0 ) ) {
-            $toggleTag.children().eq( 0 ).replaceWith( toggleImg );
+        if ($toggleTag.children().eq(0)) {
+            $toggleTag.children().eq(0).replaceWith(toggleImg);
+        } else {
+            $toggleTag.append(toggleImg);
         }
-        else {
-            $toggleTag.append( toggleImg );
-        }
     }
 
-    function setVisible( tag, visible ) {
-        visible ? $( tag ).show() : $( tag ).hide();
+    function setVisible(tag, visible) {
+        visible ? $(tag).show() : $(tag).hide();
     }
 
-    function isVisible( tag ) {
-        return $( tag ).is( ":visible" );
+    function isVisible(tag) {
+        return $(tag).is(":visible");
     }
 
-    function getTagId( unitId ) {
+    function getTagId(unitId) {
         return 'orgUnit' + unitId;
     }
 
     function getToggleExpand() {
-	console.log(dhis2BaseUrl);
-        return getToggleImage().attr( "src", dhis2BaseUrl + "/images/colapse.png" ).attr( "alt", "[+]" );
+        console.log(dhis2BaseUrl);
+        return getToggleImage().attr("src", dhis2BaseUrl + "/images/colapse.png").attr("alt", "[+]");
     }
 
     function getToggleCollapse() {
-        return getToggleImage().attr( "src", dhis2BaseUrl + "/images/expand.png" ).attr( "alt", "[-]" );
+        return getToggleImage().attr("src", dhis2BaseUrl + "/images/expand.png").attr("alt", "[-]");
     }
 
     function getToggleBlank() {
-        return getToggleImage().attr( "src", dhis2BaseUrl + "/images/transparent.gif" ).removeAttr( "alt" );
+        return getToggleImage().attr("src", dhis2BaseUrl + "/images/transparent.gif").removeAttr("alt");
     }
 
     function getToggleImage() {
-        return $( "<img/>" ).attr( "width", 9 ).attr( "height", 9 );
+        return $("<img/>").attr("width", 9).attr("height", 9);
     }
 }
