@@ -5,7 +5,7 @@
     "launch_path": "index.html",
 	"appType": "APP",
     "icons": {
-        "48": "/img/logo.png"
+        "48": "img/logo.png"
     },
     "developer": {
         "name": "Jakob Gerstenlauer",
